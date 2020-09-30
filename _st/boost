@@ -1,0 +1,12 @@
+#!/bin/execlineb -WS0
+# `cdon` wrapper to boost a status
+#
+# usage:
+# (account) mdon st -s(id) boost
+
+importas -iu id ELGETOPT_i
+cdon
+	-ustatuses/${id}/reblog
+	--
+		-XPOST
+		${@}

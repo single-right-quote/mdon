@@ -1,0 +1,12 @@
+#!/bin/execlineb -WS0
+
+ifelse { s6-test -v ELGETOPT_i }
+{
+	foreground { error mdon: ac: me: supplying an account }
+	exit 100
+}
+
+cdon
+	-uaccounts/verify_credentials
+	--
+		${@}

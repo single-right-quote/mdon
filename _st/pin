@@ -1,0 +1,12 @@
+#!/bin/execlineb -WS0
+# `cdon` wrapper to pin a status
+#
+# usage:
+# (account) mdon st -s(id) pin
+
+importas -iu id ELGETOPT_i
+cdon
+	-ustatuses/${id}/pin
+	--
+		-XPOST
+		${@}

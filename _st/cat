@@ -1,0 +1,11 @@
+#!/bin/execlineb -WS0
+# `cdon` wrapper to view a status
+#
+# usage:
+# (account) mdon st -s(id) cat
+
+importas -iu id ELGETOPT_i
+cdon
+	-ustatuses/${id}
+	--
+	${@}

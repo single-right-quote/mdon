@@ -1,0 +1,11 @@
+#!/bin/execlineb -WS0
+# `cdon` wrapper to see a status context
+#
+# usage:
+# (account) mdon st -s(id) context
+
+importas -iu id ELGETOPT_i
+cdon
+	-ustatuses/${id}/context
+	--
+		${@}

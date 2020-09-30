@@ -1,0 +1,11 @@
+#!/bin/execlineb -WS0
+# return an array of Relationships
+# (uniquely) supports a comma-delimited list of IDs
+
+importas -isud, id ELGETOPT_i
+cdon
+	-uaccounts/relationships
+	--
+		-G
+		-did[]=${id}
+		${@}

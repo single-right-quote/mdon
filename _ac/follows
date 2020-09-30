@@ -1,0 +1,15 @@
+#!/bin/execlineb -WS0
+# return an array of Relationships
+# (uniquely) supports a comma-delimited list of IDs
+
+backtick -nD "" me {
+	if { s6-test ! -v ELGETOPT_i }
+		pipeline { me }
+		jq -j .id
+}
+importas -iu me me
+importas -uD ${me} id ELGETOPT_i
+cdon
+	-uaccounts/${id}/following
+	--
+		${@}

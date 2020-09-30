@@ -1,0 +1,12 @@
+#!/bin/execlineb -WS0
+
+ifelse { s6-test -v ELGETOPT_i }
+{
+	foreground { error mdon: ac: mutes: supplying an account }
+	exit 100
+}
+
+cdon
+	-umutes
+	--
+		${@}

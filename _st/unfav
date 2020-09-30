@@ -1,0 +1,12 @@
+#!/bin/execlineb -WS0
+# `cdon` wrapper to unfavorite a status
+#
+# usage:
+# (account) mdon st -s(id) unfav
+
+importas -iu id ELGETOPT_i
+cdon
+	-ustatuses/${id}/unfavourite
+	--
+		-XPOST
+		${@}

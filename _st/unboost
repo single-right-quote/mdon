@@ -1,0 +1,12 @@
+#!/bin/execlineb -WS0
+# `cdon` wrapper to unboost a status
+#
+# usage:
+# (account) mdon st -s(id) unboost
+
+importas -iu id ELGETOPT_i
+cdon
+	-ustatuses/${id}/unreblog
+	--
+		-XPOST
+		${@}

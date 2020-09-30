@@ -1,0 +1,11 @@
+#!/bin/execlineb -WS0
+# `cdon` wrapper to get a status link preview card
+#
+# usage:
+# (account) mdon st -s(id) card
+
+importas -iu id ELGETOPT_i
+cdon
+	-ustatuses/${id}/card
+	--
+		${@}

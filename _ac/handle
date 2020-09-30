@@ -1,0 +1,11 @@
+#!/bin/execlineb -W
+# convert handle to id
+
+elgetopt h:
+importas -iu handle ELGETOPT_h
+elgetpositionals
+emptyenv -P
+
+pipeline { find -q${handle} }
+if -nt { jq -j ".[] | select(.acct == \""${handle}\"") | .id" }
+	error mdon: ac: handle: fatal: not found

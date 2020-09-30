@@ -1,0 +1,8 @@
+#!/bin/execlineb -WS0
+
+importas -iu id ELGETOPT_i
+cdon
+	-uaccounts/${id}/mute
+	--
+		-XPOST
+		${@}

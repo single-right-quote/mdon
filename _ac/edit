@@ -1,0 +1,100 @@
+#!/bin/execlineb -W
+# `cdon` wrapper to edit profile information
+#
+# usage:
+# (account) mdon ac edit \
+#	[-a(avatar_file)] \ # avatar
+#	[-h(header_file)] \ # header
+#	[-d(display_name)] \
+#	[-b(bio) | -B] \ # latter accepts bio from stdin
+#	[-l(true | false)] \ # whether account is to be locked
+#	[-s(true | false)] \ # whether to mark posts sensitive by default
+#	[-v(direct | private | unlisted | public)] \ # default post privacy
+#	[-L(language)] \ # language to override language detection with
+#	[-- [curl_options]]
+
+ifelse { s6-test -v ELGETOPT_i }
+{
+	foreground { error mdon: ac: edit: supplying an account }
+	exit 100
+}
+elgetopt BL:a:b:d:h:l:s:v:
+ifelse { s6-test -v ELGETOPT_B -a -v ELGETOPT_b }
+{
+	foreground { error mdon: ac: edit: supplying bio by stdin and `-b` flag }
+	exit 100
+}
+backtick -In bio_option {
+	ifelse { s6-test -v ELGETOPT_B }
+	{
+		/bin/cat # PATH prefers ./cat
+	}
+		if { s6-test -v ELGETOPT_b }
+			printenv ELGETOPT_b	
+}
+backtick -In locked {
+	if { s6-test -v ELGETOPT_l }
+		importas -i locked ELGETOPT_l
+		ifelse {
+			s6-test ${locked} = true
+				-o ${locked} = false
+		}
+		{
+			printenv ELGETOPT_l
+		}
+			error mdon: ac: edit: warning: invalid supplied account lock; ignoring
+}
+backtick -In privacy {
+	if { s6-test -v ELGETOPT_v }
+		importas -i privacy ELGETOPT_v
+		ifelse {
+			s6-test ${privacy} = direct
+				-o ${privacy} = private
+				-o ${privacy} = unlisted
+				-o ${privacy} = public
+		}
+		{
+			printenv ELGETOPT_v
+		}
+			error mdon: ac: edit: warning: invalid supplied privacy; ignoring
+}
+backtick -In sensitive {
+	if { s6-test -v ELGETOPT_s }
+		importas -i sensitive ELGETOPT_s
+		ifelse {
+			s6-test ${sensitive} = true
+				-o ${sensitive} = false
+		}
+		{
+			printenv ELGETOPT_s
+		}
+			error mdon: ac: edit: warning: invalid supplied account sensitivity; ignoring
+}
+
+multisubstitute {
+	importas -u avi_file ELGETOPT_a
+	importas -u bio_option bio_option
+	importas -u display_name ELGETOPT_d
+	importas -u header_file ELGETOPT_h
+	importas -u language ELGETOPT_L
+	importas -u locked locked
+	importas -u privacy privacy
+	importas -u sensitive sensitive
+}
+elgetpositionals
+emptyenv -P
+
+cdon
+	-uaccounts/update_credentials
+	--
+		-XPATCH
+		# the following options may be substituted as no-words
+		-Favatar=@${avi_file}
+		-Fdisplay_name=${display_name}
+		-Fheader=@${header_file}
+		-Flocked=${locked}
+		-Fnote=${bio_option}
+		-Fsource[language]=${language}
+		-Fsource[privacy]=${privacy}
+		-Fsource[sensitive]=${sensitive}
+		${@}

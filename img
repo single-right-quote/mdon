@@ -1,0 +1,44 @@
+#!/bin/execlineb -W
+# `cdon` wrapper to upload and edit images
+#
+# usage:
+# (account) mdon img \
+#	-f(file) [-d(description)] | -i(id) -d(description)
+
+elgetopt d:i:f:
+ifelse { s6-test ! -v ELGETOPT_f -a ! -v ELGETOPT_i }
+{
+	foreground { error mdon: img: fatal: must supply image }
+	exit 100
+}
+ifelse { s6-test -v ELGETOPT_f -a -v ELGETOPT_i }
+{
+	foreground { error mdon: img: fatal: supplying image by file and ID }
+	exit 100
+}
+ifelse { s6-test -v ELGETOPT_i -a ! -v ELGETOPT_d }
+{
+	foreground { error mdon: img: fatal: supplied image ID without new description }
+	exit 100
+}
+importas -uD "" description ELGETOPT_d
+elgetpositionals
+emptyenv -P
+
+ifelse { s6-test -v ELGETOPT_f }
+{
+	importas -iu file ELGETOPT_f
+	cdon
+		-umedia
+		--
+			-XPOST
+			-Ffile=@${file}
+			-Fdescription=${description}
+			${@}
+}
+	importas -iu id ELGETOPT_i
+	cdon
+		-umedia/${id}
+		--
+			-XPUT
+			-ddescription=${description}

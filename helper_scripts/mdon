@@ -1,0 +1,8 @@
+#!/bin/execlineb -WS1
+
+multisubstitute {
+	importas HOME HOME
+	importas PATH PATH
+}
+withpath ${HOME}/bin/_mdon:${PATH}
+${@}

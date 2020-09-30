@@ -1,0 +1,5 @@
+#!/bin/execlineb -WS1
+
+fdmove -c 1 2
+foreground { echo ${@} }
+exit 1

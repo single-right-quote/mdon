@@ -1,0 +1,131 @@
+#!/bin/execlineb -W
+# `cdon` wrapper to post statuses
+#
+# usage:
+# (account) mdon post \
+#	[-r(reply_to_id)] \
+#	[-v(visibility)] \
+#	[-s(CW)] \
+#	[-@(account ...)] \
+#	-m(status_text) | -0 \
+#	[-a(media_id[,...])] \
+#	[-- [curl_options ...]]
+
+elgetopt @:0a:m:r:s:v:
+ifelse { s6-test -v ELGETOPT_0 -a -v ELGETOPT_m }
+{
+	foreground { error mdon: post: fatal: using status text from stdin and `-m` flag }
+	exit 100
+}
+ifelse { s6-test ! -v ELGETOPT_m -a ! -v ELGETOPT_0 }
+{
+	foreground { error mdon: post: fatal: no status text provided }
+	exit 100
+}
+importas -sd, media_id ELGETOPT_a
+ifelse {
+	if { s6-test -v ELGETOPT_a }
+		backtick -in id_count { argc ${media_id} }
+		importas -i id_count id_count
+		test ${id_count} -gt 4
+}
+{
+	foreground { error mdon: post: fatal: too many media attachments }
+	exit 100
+}
+
+backtick -nD "" replied_to {
+	if { s6-test -v ELGETOPT_r }
+		importas -iu id ELGETOPT_r
+		st -i${id} cat
+}
+# fall back on a default visibility from the server because POSTing an empty
+# visibility doesn't respect your default setting. also hardcode a default
+# because the preferences API requires 2.8.0.
+backtick -nD "unlisted" default_visibility {
+	if { s6-test ! -v ELGETOPT_v }
+		pipeline {
+			ifelse { s6-test -v ELGETOPT_r }
+			{
+				pipeline { printenv replied_to }
+				jq -j .visibility
+			}
+				pipeline { ac prefs }
+				jq -j .\"posting:default:visibility\"
+		}
+		read
+}
+backtick -nD " " default_cw {
+	if { s6-test -v ELGETOPT_r }
+		pipeline { printenv replied_to }
+		jq -j .spoiler_text
+}
+backtick -nD "" default_@s {
+	if { s6-test -v ELGETOPT_r }
+		pipeline {
+			backtick -in user {
+				pipeline { ac me }
+				jq .acct
+			}
+			importas -iu user user
+			foreground {
+				pipeline { printenv replied_to }
+				jq ".mentions | .[] | select(.acct != \""${user}\"") | .acct"
+			}		
+			backtick -in author {
+				pipeline { printenv replied_to }
+				jq .account.acct
+			}		
+			importas -i author author
+			if { s6-test ${author} != ${user} }
+				printenv author
+		}
+		pipeline { tr "\n" " " }
+		pipeline { sed "s/ +$//" }
+		read
+}
+backtick -nD "" @s {
+	ifelse { s6-test -v ELGETOPT_@ }
+	{
+		importas -i to_@s_nonsplit ELGETOPT_@
+		importas -isu to_@s ELGETOPT_@
+		if { s6-test ${to_@s_nonsplit} != " " }
+			s6-echo -ns" " -- @${to_@s} ""
+	}
+		importas -i to_@s_nonsplit default_@s
+		importas -isu to_@s default_@s
+		if { s6-test ${to_@s_nonsplit} != "" }
+			s6-echo -ns" " -- @${to_@s} ""
+}
+multisubstitute {
+	importas -iu d_vis default_visibility
+	importas -iu d_cw default_cw
+}
+multisubstitute {
+	importas -uD " " status ELGETOPT_m
+	importas -uD ${d_vis} visibility ELGETOPT_v
+	importas -uD " " id ELGETOPT_r
+	importas -uD ${d_cw} cw ELGETOPT_s
+	importas -iu @s @s
+}
+elgetpositionals
+emptyenv -P
+
+backtick -in final_status {
+	ifelse { s6-test -v ELGETOPT_0 }
+	{
+		foreground { s6-echo -n -- ${@s} }
+		cat
+	}
+	s6-echo -n -- ${@s}${status}
+}
+importas -iu final_status final_status
+cdon
+	-ustatuses
+	--
+		-dvisibility=${visibility}
+		-din_reply_to_id=${id}
+		-dspoiler_text=${cw}
+		-dstatus=${final_status}
+		-dmedia_ids[]=${media_id}
+		${@}

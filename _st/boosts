@@ -1,0 +1,11 @@
+#!/bin/execlineb -WS0
+# `cdon` wrapper to see users who boosted a status
+#
+# usage:
+# (account) mdon st -s(id) boosts
+
+importas -iu id ELGETOPT_i
+cdon
+	-ustatuses/${id}/reblogged_by
+	--
+		${@}

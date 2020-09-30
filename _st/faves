@@ -1,0 +1,11 @@
+#!/bin/execlineb -WS0
+# `cdon` wrapper to get users who faved a status
+#
+# usage:
+# (account) mdon st -s(id) faves
+
+importas -iu id ELGETOPT_i
+cdon
+	-ustatuses/${id}/favourited_by
+	--
+		${@}

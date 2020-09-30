@@ -1,0 +1,60 @@
+#!/bin/execlineb -W
+# a cURL wrapper that makes speaking the mastodon API somewhat easier. the
+# nontrivial bits allow sensitive data (auth tokens, arguably instance names)
+# to be saved in a password store (see `pass(1)`)
+#
+# usage:
+# % (account) cdon -u(api_uri) [-- [curl_options ...]]
+
+redirfd -r 0 /dev/null
+elgetopt u:
+multisubstitute {
+	importas -iu api_uri ELGETOPT_u
+	importas -iu fedi_account fedi_account
+}
+elgetpositionals
+emptyenv -P
+
+backtick -in base_uri { pass fedi/dev/${fedi_account}/base_uri }
+importas -iu base_uri base_uri
+pipeline {
+	if { printf "Authorization: Bearer " }
+	pass fedi/dev/${fedi_account}/cURL/access_token
+}
+curl
+	--url 	${base_uri}/api/v1/${api_uri}
+	-NsH@-
+	${@}
+
+# some examples, based on actual personal usage:
+#
+# - [shell] posting a status
+#	% c cdon -ustatuses -- \
+#		-d'spoiler_text=meta' \
+#		-d'status=posting from cURL'
+#
+#	# this command line eventually becomes [formatted for readability]
+#	#
+#	# % curl --url https://cybre.space/api/v1/statuses \
+#	#	-NsH@- \
+#	#	-d'spoiler_text=meta' \
+#	#	-d'status=posting from cURL'
+#	#
+#	# note that this command executes with stdin containing
+#	# the line "Authorization: Bearer ${access_token}\n".
+#
+# - [shell] updating a display name
+#	s cdon -uaccounts/update_credentials -- \
+#		-XPATCH \
+#		-d'display_name=my super secret private account'
+#
+# - [execline]: fork hell: playing a custom sound on every notification
+#	pipeline { a cdon -ustreaming/user }
+#	loopwhilex
+#		if -t {
+#			pipeline { read }
+#			grep -s "^event: notification$"
+#		}
+#		mpv sexy_boop.opus
+#
+# see https://docs.joinmastodon.org/api/

@@ -1,0 +1,12 @@
+#!/bin/execlineb -W
+# print the argument count, excepting ${0}
+#
+# usage:
+# % argc
+# 0
+# % argc this is a test
+# 4
+# % argc 'this is another test'
+# 1
+
+printenv "#"

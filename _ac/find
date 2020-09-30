@@ -1,0 +1,12 @@
+#!/bin/execlineb -W
+
+elgetopt -q:
+importas -iu query ELGETOPT_q
+elgetpositionals
+emptyenv -P
+
+cdon
+	-uaccounts/search
+	--
+		-Gdq=${query}
+		${@}

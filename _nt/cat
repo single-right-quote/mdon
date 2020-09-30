@@ -1,0 +1,18 @@
+#!/bin/execlineb -WS0
+# `cdon` wrapper to view notifications
+#
+# usage:
+# (account) mdon nt [-i(notif_id)] cat
+
+ifelse { s6-test -v ELGETOPT_i }
+{
+	importas -iu id ELGETOPT_i
+	cdon
+		-unotifications/${id}
+		--
+		${@}
+}
+	cdon
+		-unotifications
+		--
+		${@}

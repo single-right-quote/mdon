@@ -1,0 +1,12 @@
+#!/bin/execlineb -WS0
+# `cdon` wrapper to fave a status
+#
+# usage:
+# (account) mdon st -s(id) rm
+
+importas -iu id ELGETOPT_i
+cdon
+	-ustatuses/${id}/favourite
+	--
+		-XPOST
+		${@}

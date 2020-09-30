@@ -1,0 +1,11 @@
+#!/bin/execlineb -W
+
+importas -iu path 1
+shift
+elgetpositionals
+emptyenv -P
+
+unexport path
+export PATH ${path}
+# `export` execs with its PATH, not the one it exports
+exec ${@}

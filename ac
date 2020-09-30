@@ -1,0 +1,24 @@
+#!/bin/execlineb -W
+
+multisubstitute {
+	importas HOME HOME
+	importas PATH PATH
+}
+withpath ${HOME}/bin/_mdon/_ac:${PATH}
+
+elgetopt i:h:
+ifelse { s6-test -v ELGETOPT_i -a -v ELGETOPT_h }
+{
+	foreground { error mdon: ac: fatal: supplying account by id and handle }
+	exit 100
+}
+elgetpositionals -P1
+emptyenv -P
+
+ifelse { s6-test -v ELGETOPT_h }
+{
+	importas -iu handle ELGETOPT_h
+	backtick -in ELGETOPT_i { handle -h${handle} }
+	${@}
+}
+	${@}

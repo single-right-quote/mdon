@@ -1,0 +1,26 @@
+#!/bin/execlineb -W
+# return an array of Relationships
+# (uniquely) supports a comma-delimited list of IDs
+
+backtick -nD "" me {
+	if { s6-test ! -v ELGETOPT_i }
+		pipeline { me }
+		jq -j .id
+}
+importas -iu me me
+importas -uD ${me} id ELGETOPT_i
+
+elgetopt R
+backtick -In exclude_reblogs {
+	if { s6-test -v ELGETOPT_R }
+		s6-echo -n true
+}
+importas -u exclude_reblogs exclude_reblogs
+
+elgetpositionals
+emptyenv -P
+cdon
+	-uaccounts/${id}/statuses
+	--
+		-Gdexclude_reblogs=${exclude_reblogs}
+		${@}
