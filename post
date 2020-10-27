@@ -105,27 +105,39 @@ multisubstitute {
 	importas -uD " " status ELGETOPT_m
 	importas -uD ${d_vis} visibility ELGETOPT_v
 	importas -uD " " id ELGETOPT_r
-	importas -uD ${d_cw} cw ELGETOPT_s
 	importas -iu @s @s
 }
 elgetpositionals
 emptyenv -P
 
-backtick -in final_status {
-	ifelse { s6-test -v ELGETOPT_0 }
-	{
-		foreground { s6-echo -n -- ${@s} }
-		cat
-	}
-	s6-echo -n -- ${@s}${status}
+backtick -D ${d_cw} encoded_cw {
+	if { s6-test -v ELGETOPT_s }
+		importas -iu raw_cw ELGETOPT_s
+		pipeline { s6-echo -n -- ${raw_cw} }
+		urlencode
 }
-importas -iu final_status final_status
+backtick -in final_status {
+	pipeline {
+		ifelse { s6-test -v ELGETOPT_0 }
+		{
+			foreground { s6-echo -n -- ${@s} }
+			cat
+		}
+		s6-echo -n -- ${@s}${status}
+	}
+	urlencode
+}
+
+multisubstitute {
+	importas -iu final_status final_status
+	importas -iu encoded_cw encoded_cw
+}
 cdon
 	-ustatuses
 	--
 		-dvisibility=${visibility}
 		-din_reply_to_id=${id}
-		-dspoiler_text=${cw}
+		-dspoiler_text=${encoded_cw}
 		-dstatus=${final_status}
 		-dmedia_ids[]=${media_id}
 		${@}
